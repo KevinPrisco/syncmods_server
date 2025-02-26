@@ -15,7 +15,7 @@ async def check_mods(request: schemes.ModsRequest):
     client_mods = set(request.mods_list)
 
     update_required = server_mods != client_mods
-
+    print(update_required)
     return schemes.ModsListUpdate(
         update_required=update_required,
         mods_list=list(server_mods)

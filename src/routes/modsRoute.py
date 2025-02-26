@@ -10,7 +10,7 @@ router = APIRouter(
 )
 
 clients = set()
-
+old_mods = set()
 
 @router.websocket("/connect")
 async def wsconection_endpoint(websocket: WebSocket):
@@ -26,20 +26,24 @@ async def wsconection_endpoint(websocket: WebSocket):
 			print(f"Cliente desconectado: {websocket.client}")
 
 
-
 @router.post("/update-mods", response_model=schemes.ModsListUpdate)
 async def trigger_sync():
+    global old_mods
     print(f"Clientes conectados: {len(clients)}")
     if not clients:
         print('no clientes')
         return schemes.ModsListUpdate(update_required=False, mods_list=[])
 
-    # Obtener lista de mods en el servidor
     mods_folder = os.getenv("MODS_FOLDER", "./mods")
     server_mods = set(os.listdir(mods_folder))
 
+    if not old_mods:
+        last_known_mods = server_mods
+
+    update_required = need_update(old_mods, server_mods)
+
     update_message = schemes.ModsListUpdate(
-        update_required=True,
+        update_required=update_required,
         mods_list=list(server_mods)
     )
 
@@ -62,3 +66,8 @@ async def download_mod(filename: str):
         raise HTTPException(status_code=404, detail="Archivo no encontrado")
 
     return FileResponse(file_path, filename=filename)
+
+
+
+def need_update(old, new):
+    return old != new

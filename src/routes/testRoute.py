@@ -6,6 +6,6 @@ router = APIRouter(
     dependencies=[]
 )
 
-@router.get("/test")
+@router.get("/")
 async def healtcheck():
     return 'Funcionando!'
