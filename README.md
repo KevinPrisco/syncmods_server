@@ -21,3 +21,13 @@ Agrega las nuevas dependencias(librerias) instaladas al archivo de requerimiento
 ```
 pip freeze > requirements.txt
 ```
+# Ejecutar el proyecto
+## ejecutar el proyecto en modo debug
+```
+uvicorn main:app --reload
+```
+
+## ejecutar el proyecto en modo produccion
+```
+uvicorn main:app --host x.x.x.x --port x
+```
