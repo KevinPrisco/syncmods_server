@@ -1,5 +1,6 @@
-from fastapi import APIRouter, WebSocket, WebSocketDisconnect
+from fastapi import APIRouter, WebSocket, WebSocketDisconnect, HTTPException
 import os
+from fastapi.responses import FileResponse
 from ..models import schemes
 
 router = APIRouter(
@@ -26,34 +27,38 @@ async def wsconection_endpoint(websocket: WebSocket):
 
 
 
-@router.post("/update-mods", response_model=schemes.FTPConnection)
+@router.post("/update-mods", response_model=schemes.ModsListUpdate)
 async def trigger_sync():
+    print(f"Clientes conectados: {len(clients)}")
     if not clients:
-        return schemes.FTPConnection(
-            update_required=False,
-            server="",
-            user="",
-            password="",
-            mods_list=[]
-        )
+        print('no clientes')
+        return schemes.ModsListUpdate(update_required=False, mods_list=[])
 
     # Obtener lista de mods en el servidor
-    server_mods = set(os.listdir(os.getenv("MODS_FOLDER", "")))
+    mods_folder = os.getenv("MODS_FOLDER", "./mods")
+    server_mods = set(os.listdir(mods_folder))
 
-    # Crear mensaje de actualización basado en el modelo
-    update_message = schemes.FTPConnection(
+    update_message = schemes.ModsListUpdate(
         update_required=True,
-        server=os.getenv("FTP_SERVER", ""),
-        user=os.getenv("FTP_USER", ""),
-        password=os.getenv("FTP_PASS", ""),
         mods_list=list(server_mods)
     )
 
     # Notificar a cada cliente WebSocket
     for ws in clients.copy():
         try:
-            await ws.send_text(update_message)
+            assert isinstance(ws, WebSocket)
+            await ws.send_text(update_message.model_dump_json())
         except Exception:
             clients.remove(ws)
 
     return update_message 
+
+@router.get("/mods/{filename}")
+async def download_mod(filename: str):
+    mods_folder = os.getenv("MODS_FOLDER", "./mods")
+    file_path = os.path.join(mods_folder, filename)
+
+    if not os.path.exists(file_path):
+        raise HTTPException(status_code=404, detail="Archivo no encontrado")
+
+    return FileResponse(file_path, filename=filename)
