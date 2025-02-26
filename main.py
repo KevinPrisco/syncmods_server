@@ -1,12 +1,13 @@
 from typing import Union
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from src.routes import testRoute, modsRoute
+from src.routes import testRoute, modsRoute, check
 from dotenv import load_dotenv
 
 app = FastAPI()
 app.include_router(testRoute.router)
 app.include_router(modsRoute.router)
+app.include_router(check.router)
 
 app.add_middleware(
     CORSMiddleware,

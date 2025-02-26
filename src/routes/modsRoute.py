@@ -1,6 +1,6 @@
 from fastapi import APIRouter, WebSocket, WebSocketDisconnect
 import os
-from models import schemes
+from ..models import schemes
 
 router = APIRouter(
     prefix='/ws',

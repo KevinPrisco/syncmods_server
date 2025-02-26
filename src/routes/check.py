@@ -1,6 +1,6 @@
 from fastapi import APIRouter
 import os, json
-from models import schemes
+from ..models import schemes
 
 router = APIRouter(
     prefix='/check',
